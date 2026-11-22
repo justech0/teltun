@@ -1,0 +1,21 @@
+# ChromeOS installer: double-click in Files -> "Install with Linux".
+# It installs TelTun.apk on the Chromebook's Android side (see postinst.sh).
+name: teltun-chromeos
+arch: arm64
+platform: linux
+version: ${VERSION}
+section: net
+maintainer: Enes <iletisim@enestunc.com.tr>
+description: |
+  Installs TelTun for ChromeOS: your phone's mobile internet for the whole
+  Chromebook over USB. Needs "Develop Android apps > ADB debugging" on.
+homepage: https://github.com/justech0/TelTun
+license: GPL-3.0
+depends:
+  - adb
+contents:
+  - src: build/bin/TelTun.apk
+    dst: /opt/teltun-chromeos/TelTun.apk
+
+scripts:
+  postinstall: packaging/chromeos/postinst.sh

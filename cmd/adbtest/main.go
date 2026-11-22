@@ -37,6 +37,7 @@ func main() {
 	keyDir := flag.String("key", "", "folder with adbkey (default ~/.android)")
 	apk := flag.String("apk", "", "install this APK, start TelTun and exit")
 	shot := flag.String("shot", "", "save a screenshot (PNG) to this file and exit")
+	shCmd := flag.String("sh", "", "run one shell command, print its output and exit")
 	flag.Parse()
 	if *keyDir == "" {
 		home, _ := os.UserHomeDir()
@@ -59,6 +60,12 @@ func main() {
 		must(conn.Push(b, "/data/local/tmp/teltun.apk", 0o644))
 		out, _ := conn.Shell("pm install -r /data/local/tmp/teltun.apk && am start -n app.teltun/.MainActivity")
 		fmt.Println(strings.TrimSpace(out))
+		return
+	}
+	if *shCmd != "" {
+		out, err := conn.Shell(*shCmd)
+		must(err)
+		fmt.Print(out)
 		return
 	}
 	if *shot != "" {
