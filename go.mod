@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	fyne.io/systray v1.12.2
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/hashicorp/yamux v0.1.2
 	github.com/sagernet/sing v0.8.14
 	github.com/sagernet/sing-box v1.13.21
@@ -24,7 +25,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/go-chi/chi/v5 v5.2.5 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect

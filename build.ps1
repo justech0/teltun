@@ -4,13 +4,14 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
 # Google platform-tools (adb) are bundled into the exe.
-if (-not (Test-Path assets/adb/adb.exe)) {
+if (-not (Test-Path assets/adb/windows/adb.exe)) {
   $zip = Join-Path $env:TEMP "platform-tools.zip"
   Invoke-WebRequest "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -OutFile $zip
   $tmp = Join-Path $env:TEMP "teltun-pt"
   Expand-Archive $zip $tmp -Force
+  New-Item -ItemType Directory -Force assets/adb/windows | Out-Null
   foreach ($f in @("adb.exe", "AdbWinApi.dll", "AdbWinUsbApi.dll", "NOTICE.txt")) {
-    Copy-Item (Join-Path $tmp "platform-tools/$f") assets/adb/
+    Copy-Item (Join-Path $tmp "platform-tools/$f") assets/adb/windows/
   }
   Remove-Item $zip, $tmp -Recurse -Force
 }

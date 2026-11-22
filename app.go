@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/exec"
+	"os/signal"
+	goruntime "runtime"
 	"sync"
+	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -19,7 +24,7 @@ type App struct {
 	ctx      context.Context
 	eng      *engine.Engine
 	tray     *tray
-	quitting bool
+	quitting atomic.Bool // set when TelTun should really exit, not hide
 
 	mu       sync.Mutex
 	settings settings.Settings
@@ -30,6 +35,7 @@ type App struct {
 
 type Snapshot struct {
 	Version   string            `json:"version"`
+	OS        string            `json:"os"`
 	Status    engine.Status     `json:"status"`
 	Settings  settings.Settings `json:"settings"`
 	Autostart bool              `json:"autostart"`
@@ -43,6 +49,13 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	// Logout, shutdown, kill or Ctrl+C: really quit instead of hiding.
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sig
+		a.Quit()
+	}()
 	a.eng.OnStatus = func(s engine.Status) {
 		runtime.EventsEmit(ctx, "status", s)
 		a.tray.update(s.State, a.lang())
@@ -65,7 +78,9 @@ func (a *App) shutdown(ctx context.Context) {
 
 // beforeClose hides to tray instead of quitting, if the user wants that.
 func (a *App) beforeClose(ctx context.Context) bool {
-	if a.quitting || !a.Settings().CloseToTray {
+	// No visible tray icon (macOS, GNOME without AppIndicator): hiding
+	// would leave no way back, so close for real.
+	if a.quitting.Load() || !a.Settings().CloseToTray || a.tray == nil || !trayVisible() {
 		return false
 	}
 	runtime.WindowHide(ctx)
@@ -131,6 +146,7 @@ func (a *App) Snapshot() Snapshot {
 	defer a.mu.Unlock()
 	return Snapshot{
 		Version:   version,
+		OS:        goruntime.GOOS,
 		Status:    a.eng.Status(),
 		Settings:  a.settings,
 		Autostart: autostart.Enabled(),
@@ -215,7 +231,11 @@ func (a *App) emitHotspot(i hotspot.Info, err error) {
 }
 
 func (a *App) OpenLogFolder() {
-	exec.Command("explorer.exe", engine.DataDir()).Start()
+	opener := map[string]string{"windows": "explorer.exe", "darwin": "open"}[goruntime.GOOS]
+	if opener == "" {
+		opener = "xdg-open"
+	}
+	exec.Command(opener, engine.DataDir()).Start()
 }
 
 func (a *App) OpenURL(u string) { runtime.BrowserOpenURL(a.ctx, u) }
@@ -225,10 +245,17 @@ func (a *App) Show() {
 	runtime.WindowUnminimise(a.ctx)
 }
 
-func (a *App) Hide()     { runtime.WindowHide(a.ctx) }
+// Hide sends the window to the tray, or quits when no tray icon can be seen.
+func (a *App) Hide() {
+	if a.tray == nil || !trayVisible() {
+		a.Quit()
+		return
+	}
+	runtime.WindowHide(a.ctx)
+}
 func (a *App) Minimise() { runtime.WindowMinimise(a.ctx) }
 
 func (a *App) Quit() {
-	a.quitting = true
+	a.quitting.Store(true)
 	runtime.Quit(a.ctx)
 }

@@ -140,7 +140,7 @@ function renderDevices() {
       const ok = dv.state === 'device';
       d.innerHTML = '<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
       if (!ok) d.classList.add('wait');
-      const stKey = { device: 'stDevice', unauthorized: 'stUnauthorized' }[dv.state] || 'stOffline';
+      const stKey = { device: 'stDevice', unauthorized: 'stUnauthorized', nopermission: 'stNoPermission' }[dv.state] || 'stOffline';
       const name = document.createElement('b');
       name.textContent = dv.model || dv.serial;
       const st = document.createElement('span');
@@ -213,7 +213,9 @@ function renderHotspot() {
   $('hsMsg').textContent = hotspot && hotspot.msg ? hotspot.msg : (hotspot && hotspot.profile ? hotspot.profile : '');
   const b = $('hsBtn');
   b.textContent = on ? t('hsStop') : t('hsStart');
-  b.disabled = hsBusy;
+  const unsupported = hotspot && hotspot.state === 'Unsupported';
+  b.disabled = hsBusy || unsupported;
+  if (unsupported) $('hsMsg').textContent = t('hsUnsupported');
   $('hsSsid').textContent = hotspot && hotspot.ssid || t('none');
   const pass = hotspot && hotspot.pass;
   $('hsPassView').textContent = pass ? (reveal ? pass : '•'.repeat(Math.min(pass.length, 12))) : t('none');
@@ -285,6 +287,7 @@ EventsOn('hotspot', (h) => { hotspot = h; renderHotspot(); });
 // ---------- boot ----------
 (async () => {
   const snap = await Go.Snapshot();
+  document.documentElement.dataset.os = snap.os || 'windows';
   settings = snap.settings;
   status = snap.status;
   devices = snap.devices || [];

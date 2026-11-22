@@ -1,0 +1,77 @@
+# Builds TelTun for Windows and Linux. Pushing a tag like v1.1.0 also puts
+# the files on a draft GitHub release (notes are written by hand, then the
+# draft is published).
+name: Build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: "1.26.x"
+  NODE_VERSION: "22"
+  WAILS_VERSION: "v2.17.0"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "${{ env.GO_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@${{ env.WAILS_VERSION }}
+      - run: ./build.ps1
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: build/bin/TelTun.exe
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "${{ env.GO_VERSION }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@${{ env.WAILS_VERSION }}
+      - run: ./build.sh
+      - name: Package (tar.gz + deb)
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          [ "$GITHUB_REF_TYPE" = tag ] || V="0.0.0-dev"
+          mkdir -p dist/TelTun
+          cp build/bin/TelTun dist/TelTun/teltun
+          cp packaging/linux/teltun.desktop packaging/linux/install.sh dist/TelTun/
+          cp build/appicon-256.png dist/TelTun/teltun.png
+          tar -C dist -czf "dist/TelTun-$V-linux-amd64.tar.gz" TelTun
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.43.0
+          VERSION="$V" nfpm pkg -f packaging/linux/nfpm.yaml -p deb -t dist/
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: files, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: TelTun ${{ github.ref_name }}
+          files: files/*

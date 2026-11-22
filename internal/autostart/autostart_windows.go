@@ -1,7 +1,7 @@
-// Package autostart starts TelTun at sign-in through Task Scheduler.
-// A scheduled task can run with admin rights without a UAC prompt, which
-// the virtual network card needs. A Run registry key cannot do that.
 package autostart
+
+// Windows: a scheduled task, not a Run key. A scheduled task can run with
+// admin rights without a UAC prompt, which the virtual network card needs.
 
 import (
 	"bytes"

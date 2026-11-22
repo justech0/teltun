@@ -1,3 +1,5 @@
+//go:build !darwin
+
 package main
 
 import (
@@ -43,7 +45,7 @@ func startTray(a *App) *tray {
 }
 
 func (t *tray) onReady(a *App) {
-	systray.SetIcon(trayOff)
+	systray.SetIcon(trayIcon(trayOff))
 	systray.SetOnTapped(a.Show)
 	t.mu.Lock()
 	t.show = systray.AddMenuItem("", "")
@@ -101,12 +103,12 @@ func (t *tray) update(state engine.State, lang string) {
 	t.quit.SetTitle(tx["quit"])
 	switch state {
 	case engine.Connected:
-		systray.SetIcon(trayOn)
+		systray.SetIcon(trayIcon(trayOn))
 		systray.SetTooltip(tx["on"])
 		t.toggle.SetTitle(tx["disconnect"])
 		t.toggle.Enable()
 	case engine.Idle:
-		systray.SetIcon(trayOff)
+		systray.SetIcon(trayIcon(trayOff))
 		systray.SetTooltip(tx["off"])
 		t.toggle.SetTitle(tx["connect"])
 		t.toggle.Enable()

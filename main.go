@@ -1,4 +1,4 @@
-// TelTun shares a phone's mobile data with a Windows PC over USB.
+// TelTun shares an Android phone's mobile data with a computer over USB.
 // Made by Enes.
 package main
 
@@ -9,16 +9,22 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+
+	"teltun/internal/engine"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
-var version = "1.0.3"
+var version = "1.1.0"
 
 func main() {
+	// Linux/macOS: the same binary, started as root, makes the TelTun card.
+	if len(os.Args) > 1 && os.Args[1] == "--tun-helper" {
+		os.Exit(engine.RunHelper(os.Args[2:]))
+	}
+
 	startHidden := false
 	for _, a := range os.Args[1:] {
 		if a == "--tray" {
@@ -29,7 +35,7 @@ func main() {
 	app := NewApp()
 	app.tray = startTray(app)
 
-	err := wails.Run(&options.App{
+	opts := &options.App{
 		Title:            "TelTun",
 		Width:            980,
 		Height:           660,
@@ -37,7 +43,7 @@ func main() {
 		MinHeight:        600,
 		Frameless:        true,
 		StartHidden:      startHidden,
-		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
+		BackgroundColour: &options.RGBA{R: 10, G: 12, B: 34, A: 255},
 		AssetServer:      &assetserver.Options{Assets: assets},
 		OnStartup:        app.startup,
 		OnShutdown:       app.shutdown,
@@ -49,15 +55,11 @@ func main() {
 				runtime.WindowUnminimise(app.ctx)
 			},
 		},
-		Windows: &windows.Options{
-			WebviewIsTransparent: true,
-			WindowIsTranslucent:  true,
-			BackdropType:         windows.Acrylic,
-			Theme:                windows.Dark,
-		},
 		Bind: []interface{}{app},
-	})
-	if err != nil {
+	}
+	platformOptions(opts)
+
+	if err := wails.Run(opts); err != nil {
 		println("Error:", err.Error())
 	}
 }

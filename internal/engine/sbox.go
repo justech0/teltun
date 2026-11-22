@@ -20,6 +20,10 @@ import (
 	"github.com/sagernet/sing/common/json"
 )
 
+// boxLogDir overrides where sing-box writes its log, so the root helper
+// writes into the user's folder instead of root's.
+var boxLogDir string
+
 // boxContext registers only what TelTun uses: a TUN inbound and a SOCKS
 // outbound. This keeps the exe much smaller than a full sing-box.
 func boxContext() context.Context {
@@ -47,7 +51,11 @@ func boxConfig(socksPort int, blockQUIC bool) string {
 		// QUIC (UDP 443) over TCP is slow; browsers fall back to TCP.
 		quic = `,{"network":"udp","port":443,"action":"reject"}`
 	}
-	logPath, _ := json.Marshal(filepath.Join(DataDir(), "sing-box.log"))
+	dir := boxLogDir
+	if dir == "" {
+		dir = DataDir()
+	}
+	logPath, _ := json.Marshal(filepath.Join(dir, "sing-box.log"))
 	return fmt.Sprintf(`{
   "log": {"level": "warn", "timestamp": true, "output": %s},
   "dns": {

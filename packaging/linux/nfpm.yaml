@@ -1,0 +1,28 @@
+# .deb package for TelTun (built by the release workflow with nfpm).
+name: teltun
+arch: amd64
+platform: linux
+version: ${VERSION}
+section: net
+priority: optional
+maintainer: Enes <iletisim@enestunc.com.tr>
+description: |
+  Share your Android phone's mobile internet with this computer over USB.
+  One adb stream, many connections inside; the phone opens the real ones.
+homepage: https://github.com/justech0/TelTun
+license: GPL-3.0
+depends:
+  - libgtk-3-0
+  - libwebkit2gtk-4.1-0
+  - pkexec | policykit-1
+recommends:
+  - network-manager
+  - android-sdk-platform-tools-common
+contents:
+  - src: build/bin/TelTun
+    dst: /usr/bin/teltun
+    file_info: { mode: 0755 }
+  - src: packaging/linux/teltun.desktop
+    dst: /usr/share/applications/teltun.desktop
+  - src: build/appicon-256.png
+    dst: /usr/share/icons/hicolor/256x256/apps/teltun.png

@@ -22,6 +22,8 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+/* only Windows has system glass behind the window */
+html[data-os="linux"] body, html[data-os="darwin"] body { background: #0b0d24; }
 html, body { height: 100%; margin: 0; }
 body {
   font-family: var(--font);

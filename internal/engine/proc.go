@@ -9,21 +9,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"teltun/assets"
 )
 
-const createNoWindow = 0x08000000
-
-// hidden makes a child process run with no console window.
-func hidden(cmd *exec.Cmd) *exec.Cmd {
-	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: createNoWindow}
-	return cmd
-}
-
-// DataDir is %LOCALAPPDATA%\TelTun.
+// DataDir is the per-user cache folder: %LOCALAPPDATA%\TelTun on Windows,
+// ~/.cache/TelTun on Linux, ~/Library/Caches/TelTun on macOS.
 func DataDir() string {
 	base, err := os.UserCacheDir()
 	if err != nil {

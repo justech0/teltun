@@ -1,2 +1,3 @@
-build.ps1 downloads Google's Android platform-tools here (adb.exe, AdbWinApi.dll,
-AdbWinUsbApi.dll, NOTICE.txt). They are bundled into TelTun.exe.
+build.ps1 / build.sh download Google's Android platform-tools here, one folder per OS
+(windows: adb.exe, AdbWinApi.dll, AdbWinUsbApi.dll; linux and darwin: adb). The files
+for the target OS are bundled into the TelTun binary.

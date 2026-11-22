@@ -7,18 +7,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	goruntime "runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/yamux"
-	box "github.com/sagernet/sing-box"
 	"golang.org/x/net/proxy"
 
 	"teltun/internal/wire"
@@ -91,7 +92,7 @@ type Engine struct {
 	phone *exec.Cmd
 	fwd   int // local adb forward port
 	link  *link
-	box   *box.Box
+	tun   io.Closer // the TelTun virtual network card
 	stop  chan struct{}
 
 	logMu   sync.Mutex
@@ -158,7 +159,7 @@ func (e *Engine) prepare() error {
 		return fail("errPrepare", err)
 	}
 	e.runDir = dir
-	e.adbPath = filepath.Join(dir, "adb", "adb.exe")
+	e.adbPath = filepath.Join(dir, "adb", goruntime.GOOS, adbName)
 	return nil
 }
 
@@ -178,6 +179,9 @@ func (e *Engine) Devices() ([]Device, error) {
 			continue
 		}
 		d := Device{Serial: f[0], State: f[1]}
+		if f[1] == "no" { // "no permissions": Linux without udev rules
+			d.State = "nopermission"
+		}
 		for _, kv := range f[2:] {
 			if m, ok := strings.CutPrefix(kv, "model:"); ok {
 				d.Model = strings.ReplaceAll(m, "_", " ")
@@ -242,6 +246,8 @@ func (e *Engine) connect(serial string, blockQUIC bool) error {
 		return fail("errNoDevice", nil)
 	case dev.State == "unauthorized":
 		return fail("errUnauthorized", nil)
+	case dev.State == "nopermission":
+		return fail("errNoPermission", nil)
 	case dev.State != "device":
 		return fail("errOffline", errors.New(dev.State))
 	}
@@ -305,12 +311,16 @@ func (e *Engine) connect(serial string, blockQUIC bool) error {
 	e.setStatus(func(s *Status) { s.PublicIP = ip })
 
 	e.step("stepTun")
-	b, err := startBox(e.link.ln.Addr().(*net.TCPAddr).Port, blockQUIC)
+	tun, err := startTun(e.link.ln.Addr().(*net.TCPAddr).Port, blockQUIC)
 	if err != nil {
+		var se *StepError
+		if errors.As(err, &se) {
+			return err
+		}
 		return fail("errTun", err)
 	}
 	e.mu.Lock()
-	e.box = b
+	e.tun = tun
 	e.stop = make(chan struct{})
 	e.mu.Unlock()
 
@@ -483,8 +493,8 @@ func (e *Engine) Disconnect() {
 
 func (e *Engine) teardown() {
 	e.mu.Lock()
-	b, l, ph, stop, fwd := e.box, e.link, e.phone, e.stop, e.fwd
-	e.box, e.link, e.phone, e.stop, e.fwd = nil, nil, nil, nil, 0
+	b, l, ph, stop, fwd := e.tun, e.link, e.phone, e.stop, e.fwd
+	e.tun, e.link, e.phone, e.stop, e.fwd = nil, nil, nil, nil, 0
 	e.mu.Unlock()
 
 	if stop != nil {

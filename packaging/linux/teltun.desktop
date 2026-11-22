@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=TelTun
+GenericName=USB phone internet
+Comment=Share your Android phone's mobile internet with this computer over USB
+Exec=teltun
+Icon=teltun
+Terminal=false
+Categories=Network;
+Keywords=usb;tethering;android;internet;adb;
+StartupWMClass=teltun

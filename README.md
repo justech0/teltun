@@ -3,14 +3,14 @@
 </p>
 
 <h1 align="center">TelTun</h1>
-<p align="center"><b>Share your Android phone's mobile internet with your Windows PC over USB.</b><br/>
+<p align="center"><b>Share your Android phone's mobile internet with your computer over USB.</b><br/>Windows · Linux<br/>
 Made by Enes · English / Türkçe</p>
 
 ---
 
 ## English
 
-TelTun turns a USB cable into a full-speed internet line from your Android phone to your Windows PC. It skips the phone's tethering mode entirely: a helper on the phone makes every connection itself, so the operator sees ordinary phone traffic and its tethering limits never kick in. No app to install on the phone, no drivers, just one exe and one button.
+TelTun turns a USB cable into a full-speed internet line from your Android phone to your Windows or Linux computer. It skips the phone's tethering mode entirely: a helper on the phone makes every connection itself, so the operator sees ordinary phone traffic and its tethering limits never kick in. No app to install on the phone, no drivers, just one program and one button.
 
 ### Why not normal USB tethering?
 Android already has USB tethering, but many operators limit it: they block it, slow it down, or give it a small separate quota. They can do this because in tethering mode the phone works as a router. It may switch to a special tethering APN, and the PC's packets pass through with the PC's own TTL, so the operator can tell they come from another device.
@@ -26,7 +26,7 @@ On a Redmi Note 13 Pro 5G this gave about **220 Mbps**, where a well-known "hide
 - One-click **Connect / Disconnect**
 - Live **download / upload speed** with charts
 - **Mobile hotspot** button: share the tunnel with other devices over Wi-Fi
-- **Tray icon**, start with Windows, auto reconnect
+- **Tray icon**, start at sign-in, auto reconnect
 - **English and Turkish** interface
 - A **How it works** page that explains every step — TelTun is made for learning
 
@@ -34,7 +34,15 @@ On a Redmi Note 13 Pro 5G this gave about **220 Mbps**, where a well-known "hide
 1. On the phone: **Settings → About phone →** tap **Build number** (or OS version) 7 times. Developer options are now on.
 2. **Developer options → USB debugging** → on.
 3. Plug in the cable. Unlock the phone and tap **Allow** on the USB debugging prompt (tick *Always allow*).
-4. Open `TelTun.exe` (it asks for admin rights) and press **Connect**.
+4. Open TelTun and press **Connect**.
+
+### Download
+Get the files from [Releases](https://github.com/justech0/TelTun/releases/latest).
+- **Windows 10/11:** `TelTun.exe`. It asks for admin rights when it opens.
+- **Ubuntu / Debian / Mint:** `sudo apt install ./teltun_*_amd64.deb`
+- **Other Linux:** unpack `TelTun-*-linux-amd64.tar.gz` and run `sudo ./install.sh`. Needs webkit2gtk-4.1 and polkit.
+
+On Linux, TelTun asks for your password each time it connects, to create the virtual network card. If the phone shows as *no USB permission*, install the Android udev rules (`android-sdk-platform-tools-common` on Ubuntu/Debian, `android-udev` on Arch) and plug the cable in again.
 
 ### How it works
 ```
@@ -53,29 +61,30 @@ PC apps ──► TelTun virtual card ──► USB link (adb) ──► helper 
 Needs Go 1.25+, Node.js and the Wails CLI:
 ```powershell
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
-./build.ps1          # result: build/bin/TelTun.exe
+./build.ps1          # Windows, result: build/bin/TelTun.exe
+./build.sh           # Linux (needs libgtk-3-dev, libwebkit2gtk-4.1-dev), result: build/bin/TelTun
 ```
-`build.ps1` downloads Google's platform-tools (adb), cross-compiles the phone helper for arm64 / arm / x86_64 and embeds everything into a single exe.
+The build scripts download Google's platform-tools (adb) for the target OS, cross-compile the phone helper for arm64 / arm / x86_64 and embed everything into a single binary. Pushing a `v*` tag builds Windows and Linux on GitHub Actions.
 
 Project layout:
 | Path | What |
 |---|---|
 | `cmd/teltun-phone` | Helper that runs on the phone (SOCKS5 + UDP-over-TCP inside yamux) |
 | `internal/engine` | adb control, USB link, sing-box TUN |
-| `internal/hotspot` | Windows Mobile hotspot (WinRT via PowerShell) |
-| `internal/autostart` | Start with Windows (Task Scheduler) |
+| `internal/hotspot` | Hotspot: Windows Mobile hotspot (WinRT), NetworkManager on Linux |
+| `internal/autostart` | Start at sign-in: Task Scheduler, XDG autostart |
 | `frontend` | Glass UI (HTML/CSS/JS), translations in `src/i18n.js` |
 | `cmd/linktest` | Dev tool: test the phone link without touching routes |
 
 ### Notes
-- Admin rights are needed to create the virtual network card.
+- Admin rights are needed to create the virtual network card. On Linux only a small helper runs as root (via pkexec); the window and adb stay as your user.
 - Logs: `%LOCALAPPDATA%\TelTun\teltun.log` (or the Logs page).
 
 ---
 
 ## Türkçe
 
-TelTun, USB kablosuyla telefonundan Windows bilgisayarına uzanan hızlı bir internet hattına çevirir. Telefonun tethering modunu kullanmaz. Operatör sıradan telefon trafiği görür, tethering sınırları hiç devreye girmez. Telefona ekstra bir uygulama kurmana gerek yok. TelTun'u kullanman yeterli
+TelTun, USB kablosuyla telefonundan Windows veya Linux bilgisayarına uzanan hızlı bir internet hattına çevirir. Telefonun tethering modunu kullanmaz. Operatör sıradan telefon trafiği görür, tethering sınırları hiç devreye girmez. Telefona ekstra bir uygulama kurmana gerek yok. TelTun'u kullanman yeterli
 
 ### Normal USB tethering'den farkı ne?
 Android'de zaten USB tethering yani usb den internet paylaşımı mevcut. Fakat birçok operatör sınırlar koyuyor engelliyor, yavaşlatıyor ya da ayrı ve küçük bir kota veriyor.Çünkü tethering modunda telefon bir router gibi çalışır. Özel bir tethering APN'sine geçebilir, bilgisayarın paketleri de bilgisayarın kendi TTL değeriyle geçer. Operatör böylece trafiğin başka bir cihazdan geldiğini anlar.
@@ -91,7 +100,7 @@ Redmi Note 13 Pro 5G ile yaklaşık **220 Mbps** alındı. Bilinen bir "tetherin
 - Tek tıkla **Bağlan / Kes**
 - Grafikli anlık **indirme / yükleme hızı**
 - **Mobil etkin nokta** düğmesi: tüneli Wi-Fi ile başka cihazlarla paylaş
-- **Sistem tepsisi**, Windows ile başlat, kopunca yeniden bağlan
+- **Sistem tepsisi**, oturum açınca başlat, kopunca yeniden bağlan
 - **Türkçe ve İngilizce** arayüz
 - Her adımı anlatan **Nasıl çalışır** sayfası — TelTun öğrenmek için yapıldı
 
@@ -99,7 +108,15 @@ Redmi Note 13 Pro 5G ile yaklaşık **220 Mbps** alındı. Bilinen bir "tetherin
 1. Telefonda: **Ayarlar → Telefon hakkında →** **Yapı numarası**'na (veya OS sürümü) 7 kez dokun. Geliştirici seçenekleri açılır.
 2. **Geliştirici seçenekleri → USB hata ayıklama** → aç.
 3. Kabloyu tak. Telefonun kilidini aç, USB hata ayıklama sorusunda **İzin ver**'e dokun (*Her zaman izin ver*'i işaretle).
-4. `TelTun.exe`'yi aç (yönetici izni ister) ve **Bağlan**'a bas.
+4. TelTun'u aç ve **Bağlan**'a bas.
+
+### İndirme
+Dosyalar [Releases](https://github.com/justech0/TelTun/releases/latest) sayfasında.
+- **Windows 10/11:** `TelTun.exe`. Açılırken yönetici izni ister.
+- **Ubuntu / Debian / Mint:** `sudo apt install ./teltun_*_amd64.deb`
+- **Diğer Linux:** `TelTun-*-linux-amd64.tar.gz` dosyasını aç ve `sudo ./install.sh` çalıştır. webkit2gtk-4.1 ve polkit gerekir.
+
+Linux'ta TelTun her bağlanışta sanal ağ kartını kurmak için şifreni sorar. Telefon *USB izni yok* olarak görünürse Android udev kurallarını kur (Ubuntu/Debian'da `android-sdk-platform-tools-common`, Arch'ta `android-udev`) ve kabloyu yeniden tak.
 
 ### Nasıl çalışır
 - TelTun telefona küçük bir yardımcı kopyalar (`/data/local/tmp/teltun`) ve `adb shell` ile başlatır. Yardımcı sadece telefonun kendi içini 127.0.0.1 dinler.
@@ -110,10 +127,10 @@ Redmi Note 13 Pro 5G ile yaklaşık **220 Mbps** alındı. Bilinen bir "tetherin
 - Kesince ya da kapatınca sanal kart silinir, normal internet geri gelir.
 
 ### Kaynaktan derleme
-Go 1.25+, Node.js ve Wails CLI gerekir. `./build.ps1` çalıştır, sonuç `build/bin/TelTun.exe`.
+Go 1.25+, Node.js ve Wails CLI gerekir. Windows'ta `./build.ps1`, Linux'ta `./build.sh` çalıştır, sonuç `build/bin` klasöründe.
 
 ### Notlar
-- Sanal ağ kartı için yönetici izni gerekir.
+- Sanal ağ kartı için yönetici izni gerekir. Linux'ta sadece küçük bir yardımcı root olarak çalışır (pkexec ile); pencere ve adb senin kullanıcınla kalır.
 - Kayıtlar: `%LOCALAPPDATA%\TelTun\teltun.log` (veya Kayıtlar sayfası).
 
 ---
