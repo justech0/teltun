@@ -9,7 +9,7 @@ require (
 	github.com/sagernet/sing v0.8.14
 	github.com/sagernet/sing-box v1.13.21
 	github.com/wailsapp/wails/v2 v2.17.0
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.63.0
 )
 
 require (
@@ -74,14 +74,15 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	go.uber.org/zap/exp v0.3.0 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/mobile v0.0.0-20261117202452-47699113848a // indirect
+	golang.org/x/mod v0.43.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.51.0 // indirect
+	golang.org/x/tools v0.53.0 // indirect
 )
 
 // replace github.com/wailsapp/wails/v2 v2.17.0 => C:\Users\Enes\go\pkg\mod

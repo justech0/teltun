@@ -7,3 +7,10 @@ assets/phone/teltun-*
 assets/adb/*
 !assets/adb/README.md
 frontend/package.json.md5
+
+# made by build-android.ps1
+internal/droid/phone/teltun-*
+android/app/libs/
+android/.gradle/
+android/**/build/
+android/local.properties
