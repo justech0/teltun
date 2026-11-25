@@ -76,7 +76,9 @@ function renderStatus() {
   $('sideState').dataset.s = s;
 
   // idle: show the phone that is ready, or say none is found
-  const ready = (devices || []).find(d => d.state === 'device' && (!settings.device || d.serial === settings.device));
+  // the preferred phone, or any ready one (Connect falls back the same way)
+  const ready = (devices || []).find(d => d.state === 'device' && d.serial === settings.device)
+    || (devices || []).find(d => d.state === 'device');
   $('heroTitle').textContent = s === 'connected' ? (status.device || t('stConnected'))
     : s === 'idle' ? (ready ? (ready.model || ready.serial) : t('heroWait')) : t(key);
   $('heroSub').textContent = s === 'connected' ? t('subConnected') : s === 'idle' ? (ready ? t('subReady') : t('subIdle')) : '';

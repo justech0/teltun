@@ -17,7 +17,7 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-var version = "1.1.0"
+var version = "1.1.1"
 
 func main() {
 	// Linux/macOS: the same binary, started as root, makes the TelTun card.

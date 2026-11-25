@@ -107,9 +107,11 @@ func (a *App) deviceLoop() {
 				a.mu.Unlock()
 				runtime.EventsEmit(a.ctx, "devices", devs)
 
+				// Any ready phone will do: Connect falls back to it when the
+				// preferred one is not plugged in.
 				ready := false
 				for _, d := range devs {
-					if d.State == "device" && (s.Device == "" || d.Serial == s.Device) {
+					if d.State == "device" {
 						ready = true
 					}
 				}

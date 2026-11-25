@@ -234,13 +234,7 @@ func (e *Engine) connect(serial string, blockQUIC bool) error {
 	if err != nil {
 		return err
 	}
-	var dev *Device
-	for i := range devs {
-		if serial == "" || devs[i].Serial == serial {
-			dev = &devs[i]
-			break
-		}
-	}
+	dev := pickDevice(devs, serial)
 	switch {
 	case dev == nil:
 		return fail("errNoDevice", nil)
@@ -529,4 +523,24 @@ func (e *Engine) Shutdown() {
 	if e.logFile != nil {
 		e.logFile.Close()
 	}
+}
+
+// pickDevice returns the preferred phone if it is plugged in. Otherwise it
+// takes a ready phone, then any phone (so its state can be reported): a
+// preferred phone that is not here must not hide the one that is.
+func pickDevice(devs []Device, preferred string) *Device {
+	for i := range devs {
+		if preferred != "" && devs[i].Serial == preferred {
+			return &devs[i]
+		}
+	}
+	for i := range devs {
+		if devs[i].State == "device" {
+			return &devs[i]
+		}
+	}
+	if len(devs) > 0 {
+		return &devs[0]
+	}
+	return nil
 }
